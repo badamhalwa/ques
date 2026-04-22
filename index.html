@@ -258,6 +258,43 @@
   /* Click sparks container */
   #sparks-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 10000; }
   .spark { position: absolute; width: 4px; height: 4px; background: #fff; border-radius: 50%; box-shadow: 0 0 12px #0dcf83, 0 0 20px #0dcf83; }
+
+/* --- Mobile Responsiveness --- */
+@media (max-width: 768px) {
+  body { padding: 40px 16px; }
+  
+  h1 { font-size: 32px; letter-spacing: -1px; line-height: 1.2; }
+  .subtitle { font-size: 16px; }
+  .header-card { padding: 40px 24px; border-radius: 24px; margin-bottom: 30px; }
+
+  .tabs-wrapper {
+    width: calc(100% + 32px);
+    margin-left: -16px;
+    margin-right: -16px;
+    border-radius: 0;
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding: 8px 16px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .tabs-wrapper::-webkit-scrollbar { display: none; }
+  .tab { padding: 10px 18px; font-size: 14px; white-space: nowrap; }
+  
+  .qa-q { padding: 24px 20px; gap: 16px; }
+  .qa-q-text { font-size: 17px; }
+  .badge { font-size: 11px; padding: 6px 12px; letter-spacing: 0.5px; }
+  .chevron { width: 36px; height: 36px; }
+  
+  .qa-a { padding: 0 20px 24px; }
+  .qa-a p { font-size: 15px; line-height: 1.7; }
+  
+  /* Disable custom cursor on touch devices */
+  .cursor-dot, .cursor-ring { display: none !important; }
+  * { cursor: auto !important; }
+  
+  .qa-card { border-radius: 20px; }
+}
 </style>
 </head>
 <body>
