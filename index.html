@@ -261,39 +261,52 @@
 
 /* --- Mobile Responsiveness --- */
 @media (max-width: 768px) {
-  body { padding: 40px 16px; }
+  body { padding: 24px 12px; }
   
-  h1 { font-size: 32px; letter-spacing: -1px; line-height: 1.2; }
-  .subtitle { font-size: 16px; }
-  .header-card { padding: 40px 24px; border-radius: 24px; margin-bottom: 30px; }
+  h1 { font-size: 28px; letter-spacing: -0.5px; line-height: 1.2; }
+  .subtitle { font-size: 15px; }
+  .header-card { padding: 32px 20px; border-radius: 20px; margin-bottom: 24px; }
 
   .tabs-wrapper {
-    width: calc(100% + 32px);
-    margin-left: -16px;
-    margin-right: -16px;
+    width: calc(100% + 24px);
+    margin-left: -12px;
+    margin-right: -12px;
     border-radius: 0;
     justify-content: flex-start;
     overflow-x: auto;
-    padding: 8px 16px;
+    padding: 8px 12px;
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
   .tabs-wrapper::-webkit-scrollbar { display: none; }
-  .tab { padding: 10px 18px; font-size: 14px; white-space: nowrap; }
+  .tab { padding: 10px 16px; font-size: 14px; white-space: nowrap; }
   
-  .qa-q { padding: 24px 20px; gap: 16px; }
-  .qa-q-text { font-size: 17px; }
+  .qa-card-wrapper { margin-bottom: 16px; }
+  .qa-card { border-radius: 16px; }
+  
+  .qa-q { 
+    padding: 20px 16px; 
+    flex-direction: column; 
+    align-items: flex-start; 
+    gap: 16px; 
+  }
+  .qa-q-text { font-size: 17px; width: 100%; }
+  
+  /* Make badge and chevron row full width */
+  .qa-q > div { 
+    width: 100%; 
+    justify-content: space-between; 
+  }
+  
   .badge { font-size: 11px; padding: 6px 12px; letter-spacing: 0.5px; }
   .chevron { width: 36px; height: 36px; }
   
-  .qa-a { padding: 0 20px 24px; }
-  .qa-a p { font-size: 15px; line-height: 1.7; }
+  .qa-a { padding: 0 16px 20px; }
+  .qa-a p { font-size: 15px; line-height: 1.6; padding-top: 20px; }
   
   /* Disable custom cursor on touch devices */
   .cursor-dot, .cursor-ring { display: none !important; }
   * { cursor: auto !important; }
-  
-  .qa-card { border-radius: 20px; }
 }
 </style>
 </head>
@@ -469,6 +482,8 @@ function build() {
 
       // 3D Glass Tilt Effect
       card.addEventListener('mousemove', e => {
+        if (window.innerWidth <= 768) return;
+        
         const rect = card.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
