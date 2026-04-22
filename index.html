@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aranyadhwani — Judge Q&A</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-dark: #020804;
+    --accent-green: #0dcf83;
+    --accent-glow: rgba(13, 207, 131, 0.6);
+    --glass-bg: rgba(8, 16, 12, 0.35);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --text-main: #e2f0e9;
+    --text-muted: #9abfa9;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; cursor: none !important; }
+  
+  body { 
+    font-family: 'Outfit', -apple-system, sans-serif; 
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+    padding: 80px 20px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Custom Cursor */
+  .cursor-dot {
+    position: fixed; top: 0; left: 0;
+    width: 6px; height: 6px;
+    background: var(--accent-green);
+    border-radius: 50%;
+    pointer-events: none; z-index: 9999;
+    box-shadow: 0 0 15px var(--accent-green), 0 0 30px #fff;
+  }
+  .cursor-ring {
+    position: fixed; top: 0; left: 0;
+    width: 40px; height: 40px;
+    border: 1px solid rgba(13, 207, 131, 0.4);
+    border-radius: 50%;
+    pointer-events: none; z-index: 9998;
+    transition: width 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                height 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                background 0.3s ease;
+  }
+  
+  /* Cinematic Background */
+  .bg-image {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: url('https://images.unsplash.com/photo-1511497584788-876760111969?q=80&w=2532&auto=format&fit=crop') center/cover no-repeat;
+    filter: brightness(0.25) contrast(1.2) blur(3px);
+    z-index: -3;
+    transform: scale(1.05); /* Prevents blur edges */
+  }
+  
+  .bg-overlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: radial-gradient(circle at center, rgba(6, 26, 16, 0.4) 0%, rgba(2, 8, 4, 0.95) 100%);
+    z-index: -2;
+  }
+
+  /* Film Grain Noise */
+  .noise {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.85%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E');
+    opacity: 0.08;
+    pointer-events: none; z-index: -1;
+    mix-blend-mode: overlay;
+  }
+
+  canvas#fireflies {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 0; pointer-events: none;
+  }
+
+  .container { 
+    max-width: 900px; margin: 0 auto; 
+    position: relative; z-index: 10;
+  }
+
+  /* Glassmorphic Header */
+  .header-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+    border: 1px solid var(--glass-border);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 32px;
+    padding: 60px 50px;
+    margin-bottom: 50px;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.15);
+    text-align: center;
+    position: relative; overflow: hidden;
+  }
+
+  .header-card::before {
+    content: ''; position: absolute;
+    top: 0; left: -100%; width: 50%; height: 100%;
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.06), transparent);
+    transform: skewX(-20deg);
+    animation: shimmer 8s infinite ease-in-out;
+  }
+
+  @keyframes shimmer { 0% { left: -100%; } 20% { left: 200%; } 100% { left: 200%; } }
+
+  h1 { 
+    font-size: 52px; font-weight: 700; margin-bottom: 16px; 
+    background: linear-gradient(135deg, #ffffff 0%, #a1f2cd 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    letter-spacing: -1.5px;
+    filter: drop-shadow(0 0 30px rgba(13, 207, 131, 0.2));
+  }
+  
+  .subtitle { 
+    font-size: 19px; color: var(--text-muted); font-weight: 300;
+    max-width: 650px; margin: 0 auto; line-height: 1.7;
+  }
+
+  /* Animated Tabs Container */
+  .tabs-wrapper {
+    position: relative; display: flex; justify-content: center;
+    background: rgba(0,0,0,0.4); backdrop-filter: blur(24px);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 40px; padding: 8px; margin-bottom: 50px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    width: max-content; margin-left: auto; margin-right: auto;
+  }
+
+  .tab { 
+    padding: 14px 28px; border-radius: 30px; 
+    font-size: 16px; font-weight: 500; position: relative;
+    color: var(--text-muted); 
+    transition: color 0.4s ease; z-index: 2;
+  }
+
+  .tab:hover { color: #fff; }
+  .tab.active { color: #000; font-weight: 600; }
+
+  .tab-indicator {
+    position: absolute; top: 8px; left: 8px; height: calc(100% - 16px);
+    background: linear-gradient(135deg, #0dcf83 0%, #00995e 100%);
+    border-radius: 30px; transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 1; box-shadow: 0 5px 20px rgba(13, 207, 131, 0.4);
+  }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* 3D Glass Cards */
+  .qa-card-wrapper {
+    perspective: 1500px; margin-bottom: 24px;
+    animation: slideUp 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) backwards;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(60px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .qa-card { 
+    background: var(--glass-bg); 
+    backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+    border: 1px solid var(--glass-border); 
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 28px; 
+    transition: transform 0.1s ease-out, box-shadow 0.3s ease;
+    transform-style: preserve-3d;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    position: relative;
+  }
+  
+  .qa-card:hover {
+    box-shadow: 0 30px 60px rgba(0,0,0,0.5), 0 0 30px rgba(13, 207, 131, 0.15);
+  }
+
+  .qa-card-inner { transform: translateZ(30px); }
+
+  .qa-q { 
+    padding: 36px 40px; display: flex; 
+    justify-content: space-between; align-items: center; 
+    gap: 24px; user-select: none;
+  }
+
+  .qa-q-text { 
+    font-size: 21px; font-weight: 500; line-height: 1.4; 
+    flex: 1; color: #fff; transition: color 0.3s ease;
+    text-shadow: 0 4px 15px rgba(0,0,0,0.6);
+  }
+
+  .badge { 
+    font-size: 13px; padding: 8px 18px; border-radius: 30px; 
+    white-space: nowrap; flex-shrink: 0; font-weight: 600; 
+    text-transform: uppercase; letter-spacing: 1.5px;
+    border: 1px solid transparent; backdrop-filter: blur(15px);
+  }
+
+  .badge-red { 
+    background: rgba(255, 71, 87, 0.15); color: #ff6b81; 
+    border-color: rgba(255, 71, 87, 0.4); box-shadow: 0 0 20px rgba(255, 71, 87, 0.2);
+  }
+  .badge-amber { 
+    background: rgba(255, 165, 2, 0.15); color: #ffb142; 
+    border-color: rgba(255, 165, 2, 0.4); box-shadow: 0 0 20px rgba(255, 165, 2, 0.2);
+  }
+  .badge-teal { 
+    background: rgba(13, 207, 131, 0.15); color: #2ed573; 
+    border-color: rgba(13, 207, 131, 0.4); box-shadow: 0 0 20px rgba(13, 207, 131, 0.2);
+  }
+
+  .qa-a { 
+    display: none; padding: 0 40px 40px; transform: translateZ(20px);
+  }
+
+  .qa-a p { 
+    font-size: 18px; line-height: 1.8; color: #c4d6cc; 
+    margin-top: 8px; padding-top: 28px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .qa-a strong { color: #fff; font-weight: 600; }
+
+  .chevron { 
+    color: var(--accent-green); flex-shrink: 0; 
+    width: 48px; height: 48px; display: flex;
+    align-items: center; justify-content: center;
+    border-radius: 50%; background: rgba(13, 207, 131, 0.1);
+    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); 
+    border: 1px solid rgba(13, 207, 131, 0.25);
+  }
+
+  .open .chevron { 
+    background: var(--accent-green); color: #000;
+    box-shadow: 0 0 30px rgba(13, 207, 131, 0.5);
+    border-color: transparent; transform: rotate(180deg);
+  }
+
+  .open .qa-card {
+    background: rgba(12, 24, 18, 0.7); border-color: rgba(13, 207, 131, 0.5);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.8), inset 0 1px 0 rgba(13, 207, 131, 0.4);
+  }
+  .open .qa-q-text { color: #a1f2cd; }
+  .open .qa-a { display: block; animation: fadeUp 0.6s cubic-bezier(0.165, 0.84, 0.44, 1); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px) translateZ(20px); }
+    to { opacity: 1; transform: translateY(0) translateZ(20px); }
+  }
+
+  ::-webkit-scrollbar { width: 12px; }
+  ::-webkit-scrollbar-track { background: #020804; }
+  ::-webkit-scrollbar-thumb { background: rgba(13, 207, 131, 0.4); border-radius: 12px; border: 3px solid #020804;}
+  ::-webkit-scrollbar-thumb:hover { background: rgba(13, 207, 131, 0.8); }
+
+  /* Click sparks container */
+  #sparks-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 10000; }
+  .spark { position: absolute; width: 4px; height: 4px; background: #fff; border-radius: 50%; box-shadow: 0 0 12px #0dcf83, 0 0 20px #0dcf83; }
+</style>
+</head>
+<body>
+
+<div class="cursor-dot"></div>
+<div class="cursor-ring"></div>
+
+<div class="bg-image"></div>
+<div class="bg-overlay"></div>
+<div class="noise"></div>
+<canvas id="fireflies"></canvas>
+<div id="sparks-container"></div>
+
+<div class="container">
+  <div class="header-card">
+    <h1>🌲 Aranyadhwani — Judge Q&A</h1>
+    <p class="subtitle">Click any question to reveal the ideal answer. This covers every angle judges typically attack.</p>
+  </div>
+
+  <div class="tabs-wrapper">
+    <div class="tab-indicator" id="tab-indicator"></div>
+    <div class="tab active" data-target="basics" onclick="showTab(this, 'basics')">Basics</div>
+    <div class="tab" data-target="technical" onclick="showTab(this, 'technical')">Technical / DSP</div>
+    <div class="tab" data-target="ai" onclick="showTab(this, 'ai')">AI / ML</div>
+    <div class="tab" data-target="hardware" onclick="showTab(this, 'hardware')">Hardware</div>
+    <div class="tab" data-target="impact" onclick="showTab(this, 'impact')">Impact / Scale</div>
+    <div class="tab" data-target="hard" onclick="showTab(this, 'hard')">Hard questions</div>
+  </div>
+
+  <div id="basics" class="section active"></div>
+  <div id="technical" class="section"></div>
+  <div id="ai" class="section"></div>
+  <div id="hardware" class="section"></div>
+  <div id="impact" class="section"></div>
+  <div id="hard" class="section"></div>
+</div>
+
+<script>
+const data = {
+  basics: [
+    { q: "What is Aranyadhwani? Explain it in one sentence.", tag: "must know", tagClass: "badge-red",
+      a: "Aranyadhwani is an edge-AI acoustic sensor built on a ₹1,250 Raspberry Pi Zero 2W that listens to forest sounds 24/7, detects threats like chainsaws and gunshots using a neural network running entirely on the device, and sends SMS + Firebase alerts to forest rangers — all within 3 seconds, with zero audio ever leaving the device." },
+    { q: "What problem does it solve?", tag: "must know", tagClass: "badge-red",
+      a: "India loses 1.5 million hectares of forest every year to illegal logging and poaching. Existing methods fail at the moment of truth — satellites take hours to days to detect deforestation, drones cost ₹30,000+/day and only cover small areas when airborne. By the time a satellite pass captures a chainsaw, the tree is already gone. Aranyadhwani detects the threat in the first second — under 3 seconds end-to-end — at a one-time hardware cost of just ₹3,750 per node." },
+    { q: "What does the name mean?", tag: "basics", tagClass: "badge-teal",
+      a: "\"Aranyadhwani\" is Sanskrit — Aranya (अरण्य) means forest, Dhwani (ध्वनि) means sound or voice. It literally translates to \"Voice of the Forest.\" The name reflects the core idea: the forest has always spoken through sound — we built the system to finally listen to it and understand it." },
+    { q: "Walk me through how the system works end to end.", tag: "must know", tagClass: "badge-red",
+      a: "1. A ReSpeaker 2-mic HAT on the Pi captures stereo audio at 16 kHz, 24/7.\n2. Every 25ms, the audio passes through a scipy Butterworth IIR bandpass filter (80 Hz – 8 kHz) — stripping AC hum and wind noise.\n3. Every 200ms (8 chunks), the filtered window is fed to YAMNet — a TFLite neural network running entirely on the Pi — which classifies it across 521 sound categories.\n4. A spectral fingerprinting layer independently verifies the detection using physical acoustic properties (zero-crossing rate + high-frequency energy ratio).\n5. If a threat is confirmed above the confidence threshold, a 200-byte JSON alert is pushed to Firebase Firestore and an SMS is sent to the ranger via Twilio — all within 3 seconds.\n6. The raw audio is saved locally as a WAV evidence file. No audio ever leaves the device." },
+    { q: "What sounds can it detect?", tag: "basics", tagClass: "badge-teal",
+      a: "The system monitors 18 sound classes locally and sends 7 critical classes to the cloud. Critical cloud threats: Chainsaw, Power tool, Sawing, Gunshot/gunfire, Explosion, and Bang. It also logs locally: Tiger roars, Elephant calls, Dog barks, and human Speech/Conversation. The full YAMNet model covers 521 classes — we use a targeted subset relevant to forest threat detection." },
+  ],
+  technical: [
+    { q: "Why did you use scipy sosfilt instead of filtering in plain Python?", tag: "deep dive", tagClass: "badge-amber",
+      a: "Two reasons — speed and numerical stability.\n\nSpeed: sosfilt runs in compiled C at ~0.05ms per 25ms chunk. An equivalent pure-Python loop takes ~6ms — that's 120x slower. At 40 chunks/second, a slow filter would cause the audio buffer to overflow.\n\nStability: We use SOS (Second-Order Sections) format instead of standard b,a coefficients. Cascading filter stages with b,a format causes floating-point precision errors that grow with filter order. SOS decomposes the filter into stable 2nd-order stages, avoiding this entirely.\n\nThe critical implementation detail: we persist the filter state (zi) across every 25ms chunk. Without this, each chunk starts cold and produces a brief transient click at every boundary. With persistent zi, the filter behaves as a true continuous-time system." },
+    { q: "What is spectral fingerprinting and why is it needed?", tag: "deep dive", tagClass: "badge-amber",
+      a: "Spectral fingerprinting is an independent physical acoustic verification layer that runs after the neural network. It computes two features:\n- Zero-Crossing Rate (ZCR): how often the waveform crosses zero per sample\n- High-Frequency Energy Ratio: fraction of signal energy above 4 kHz\n\nThese have distinct physical signatures: a chainsaw has ZCR between 0.15–0.45 and over 30% energy above 4 kHz (continuous blade harmonics). A gunshot has near-zero ZCR (single pressure transient) and almost no high-frequency energy.\n\nWe need this because neural networks can be fooled — thunder might score similarly to a gunshot in YAMNet, but thunder fails the gunshot spectral fingerprint. When the fingerprint matches, we add a +15% confidence boost. This dual-verification dramatically reduces false positives without a separate ML model." },
+    { q: "Why use top-10 detections instead of just argmax?", tag: "deep dive", tagClass: "badge-amber",
+      a: "argmax only returns rank 1. YAMNet outputs soft probabilities — if \"Explosion\" scores 0.41 and \"Gunshot, gunfire\" scores 0.38, argmax silently discards the gunshot. That's a critical miss in a forest surveillance system.\n\nTop-10 catches both. We also do family expansion: if a parent category like \"Mechanical sound\" or \"Loud bang\" appears in top-10, we directly look up its child threat classes in the score vector. This catches aliased predictions where YAMNet fires a parent instead of the specific threat.\n\nThe lookup uses a pre-built O(1) hash map (dict) instead of list.index() — avoiding a 521-item linear scan on every 200ms inference cycle." },
+    { q: "Why does the filter state (zi) persist between chunks?", tag: "deep dive", tagClass: "badge-amber",
+      a: "A digital filter is a state machine — each output sample depends on the current input and the filter's internal memory. If you reset zi to zero at each 25ms chunk, the filter starts cold every time and produces a brief transient click at the boundary. Over 40 chunks per second, these artifacts accumulate and corrupt the frequency content that YAMNet receives.\n\nBy persisting zi across chunks, the filter behaves exactly as if the entire continuous audio stream was filtered in one pass — no boundary artifacts, clean spectral representation for the neural network." },
+    { q: "What is the Firestore type sanitizer (to_python) and why is it critical?", tag: "technical", tagClass: "badge-amber",
+      a: "NumPy operations return NumPy scalar types — np.float32, np.int64, np.bool_ — not Python native types. The Firestore SDK uses Protocol Buffers for serialization, which cannot serialize NumPy types — it throws a TypeError at runtime.\n\nto_python() recursively walks the entire alert dictionary before it touches the SDK, converting every NumPy type to native Python. Without this, every single alert write would crash silently. You'd have a system that detects threats but never reports them. It's a small function but it's the difference between a demo that works and one that fails under pressure." },
+    { q: "How does adaptive cooldown prevent a dangerous blind spot?", tag: "technical", tagClass: "badge-amber",
+      a: "A fixed cooldown (say 60 seconds) suppresses all alerts of the same class for that duration. If a poacher fires a second shot 45 seconds after the first, the system is silent — a serious safety gap.\n\nAdaptive cooldown scales the window by confidence/severity: CRITICAL (≥85% confidence) gets 30 seconds, HIGH gets 60, MEDIUM gets 90. High-confidence detections get a shorter window because we don't want to miss a follow-up event we're more certain about. Lower-confidence detections get a longer window to reduce spam from uncertain predictions." },
+    { q: "Why maintain two separate audio buffers (raw and filtered)?", tag: "technical", tagClass: "badge-amber",
+      a: "We maintain buffer_raw (unfiltered) and buffer_filtered (bandpass-cleaned) simultaneously.\n\nThe filtered buffer is what YAMNet sees — clean, noise-reduced input optimized for neural network inference.\n\nThe raw buffer is what gets saved to the evidence WAV file. The reason to keep them separate: the 80–8000 Hz filter removes low-frequency content. For the AI, that's exactly right. But for a ranger listening back to the evidence recording, filtering would make it sound unnatural and potentially remove useful context. We want the AI to get clean input and the ranger to get faithful audio." },
+  ],
+  ai: [
+    { q: "What is YAMNet and why did you choose it?", tag: "must know", tagClass: "badge-red",
+      a: "YAMNet (Yet Another Mobile Network) is a deep neural network from Google trained on AudioSet — 2 million human-labeled 10-second YouTube clips covering 521 sound categories. It uses a MobileNet v1 architecture optimized for low-power inference.\n\nWe chose it because its 521-class ontology covers the complete acoustic space — from chainsaws to wildlife calls — without any fine-tuning on proprietary datasets. The TFLite quantized version (~3.5MB) runs at 5 inferences/second on the Pi Zero 2W's quad-core ARM Cortex-A53 with no GPU. State-of-the-art audio classification at the absolute hardware edge." },
+    { q: "Did you train or fine-tune the model yourself?", tag: "must know", tagClass: "badge-red",
+      a: "We used YAMNet as a pre-trained feature extractor — no fine-tuning on the edge device. YAMNet's 521-class AudioSet ontology already covers every threat class we need (Chainsaw, Gunshot, Explosion) without additional training data.\n\nOur innovation is the inference pipeline around the model: top-10 multi-label detection, family expansion, spectral fingerprinting, adaptive cooldown, and the full DSP preprocessing. The system's intelligence comes from how we query and verify the model's output. This is intentional — it means any forest deployment works immediately without collecting location-specific training data." },
+    { q: "Why TFLite specifically? Why not full TensorFlow?", tag: "ai", tagClass: "badge-amber",
+      a: "TFLite is TensorFlow's inference-only runtime optimized for constrained devices. The full TensorFlow runtime needs ~500MB RAM just to initialize — the Pi Zero 2W has 512MB total. TFLite's footprint is under 5MB.\n\nTFLite also uses quantization — converting 32-bit float weights to 8-bit integers — which reduces model size ~4x and speeds up inference because integer operations are faster on ARM Cortex than floating-point. Our entire system runs in under 200MB RAM in production, which is only possible because of TFLite." },
+    { q: "What is the false positive rate? How did you validate it?", tag: "hard", tagClass: "badge-red",
+      a: "In demo mode (HACKATHON_DEMO_MODE=True), we measured negligible false positives with spectral fingerprinting enabled. The dual-verification approach is specifically designed to reject common false positives: thunder fails the chainsaw fingerprint (wrong ZCR range), car engines fail (wrong high-frequency energy), bird calls fail the gunshot fingerprint.\n\nHonestly: we haven't yet done a full field validation with ground truth labels in a real forest — that's explicitly in our roadmap. In production, we'd run 30-day field trials and measure precision/recall against manually annotated ranger incident logs. Demo validation is not production validation." },
+    { q: "Why not build a custom fine-tuned model for forest sounds?", tag: "hard", tagClass: "badge-red",
+      a: "That is actually our Phase 2 roadmap. A custom model would be smaller (~150KB vs 3.5MB), faster (~20ms vs 200ms inference), and more accurate for our specific classes.\n\nBut it requires a labelled dataset of Indian forest audio — chainsaws in specific forest types, gunshots in Indian reserves, local wildlife calls — which we don't have yet. YAMNet gives us a working, validated system today. The YAMNet-based pipeline also proves out the entire system architecture — DSP, edge inference, Firebase, dashboard — so when we fine-tune a custom model, we can drop it in as a direct replacement." },
+  ],
+  hardware: [
+    { q: "Why Raspberry Pi Zero 2W? Why not a more powerful device?", tag: "must know", tagClass: "badge-red",
+      a: "Cost and power are the binding constraints. The Pi Zero 2W costs ~₹1,250 and draws ~1W — that's what makes 400m-radius 24/7 coverage at ₹3,750/node economically viable.\n\nA Pi 4 would draw 5–15W, requiring a much larger solar panel and battery — pushing node cost to ₹15,000+ and making thousand-node forest deployments unaffordable.\n\nThe Pi Zero 2W's quad-core ARM Cortex-A53 is fast enough to run YAMNet TFLite at 5 inferences/second with room to spare — our entire system runs in under 200MB RAM. It's the sweet spot: enough compute, low enough power for solar, cheap enough for scale." },
+    { q: "What microphone is used and why?", tag: "hardware", tagClass: "badge-teal",
+      a: "The ReSpeaker 2-Mic Pi HAT — a dedicated microphone array designed for the Pi's GPIO header. It connects via I2S (Inter-IC Sound bus), a dedicated digital audio protocol that bypasses USB and keeps the Pi's CPU free for inference.\n\nThe HAT has two MEMS microphones in stereo. We mix the stereo channels to mono in software by averaging both — this gives better noise rejection than a single microphone since random noise in the two channels cancels when averaged, while the actual sound source reinforces." },
+    { q: "How does it work in a remote forest without WiFi?", tag: "must know", tagClass: "badge-red",
+      a: "The critical design principle: inference happens entirely on the device. The neural network, DSP, and threat detection all run on the Pi — no internet required for detection itself. Internet is only needed to push the 200-byte JSON alert to Firebase and send the Twilio SMS.\n\nIn our Phase 3 roadmap, we replace WiFi with LoRaWAN radio — nodes use SX1262 sub-GHz radios to bounce telemetry through the forest canopy to a gateway, which connects via NB-IoT or Swarm satellite. No cell towers. No WiFi. Works 200km from the nearest road." },
+    { q: "What is the detection range per node?", tag: "hardware", tagClass: "badge-teal",
+      a: "Approximately 400–500 meters radius in typical forest conditions — based on the audible range of a chainsaw (~300–500m in dense forest) and gunshot (~500m+ in open forest). Each node covers roughly 0.5 sq km of acoustic coverage 24/7.\n\nFor context: to cover Nagarhole Tiger Reserve (~643 sq km), you'd need ~1,300 nodes at ₹1.7 crore total — compared to a single drone patrol costing ₹30,000/day running 365 days = ₹1.1 crore/year just for drone operations." },
+    { q: "What's the production hardware roadmap?", tag: "hardware", tagClass: "badge-teal",
+      a: "Phase 2: Swap Pi Zero 2W for ESP32-S3 (8MB PSRAM) running C++ and TFLite for Microcontrollers. Power drops from ~1W to under 100mW — 10x improvement enabling smaller solar panels.\n\nPhase 3: Add SX1262 LoRa radios for a two-tier forest mesh. Tree nodes relay alerts through the canopy to a gateway, which connects via NB-IoT or Swarm satellite.\n\nProduction node BOM: under $60 (~₹5,000) including solar, LiPo battery, LoRa radio, dual MEMS mics with PTFE waterproof vents, and IP67 camouflaged enclosure. Indefinite autonomous operation." },
+  ],
+  impact: [
+    { q: "What is the scale of the problem and the market?", tag: "must know", tagClass: "badge-red",
+      a: "India has 7,13,789 sq km of forest cover — ~21% of land area. At 200–250 nodes per 100 sq km, full national coverage would require ~15–18 lakh nodes. At ₹3,750/node production cost, that's ~₹560–670 crore — roughly the cost of 2–3 years of drone patrol operations across major reserves alone.\n\nGlobally, the tropical forest belt covering Brazil, Congo, and Southeast Asia represents tens of millions of sq km of at-risk forest. Once unit economics are proven in India, this is a deployment and logistics problem." },
+    { q: "Has this been tested in a real forest?", tag: "hard", tagClass: "badge-red",
+      a: "Our current demo runs on a Pi Zero 2W with a ReSpeaker HAT in a controlled environment. We've simulated Nagarhole Tiger Reserve as our reference deployment in the dashboard (aranya_pi_01 is labeled as Nagarhole). We validated the inference pipeline on audio clips of chainsaws and gunshots played through a speaker in demo mode.\n\nFull field validation in a real forest — deploying nodes for 30+ days and comparing detections against ranger incident logs — is our next step after the hackathon. Demo validation is not production validation, and we're honest about that." },
+    { q: "How is this different from Rainforest Connection and existing solutions?", tag: "impact", tagClass: "badge-teal",
+      a: "The key differentiator is edge inference with zero audio transmission. Rainforest Connection also uses acoustic AI for deforestation detection — but they send audio to the cloud for analysis, which requires constant connectivity, increases latency, has higher data costs, and raises privacy concerns around capturing forest sounds (which might include human voices).\n\nOur system does all inference on the ₹1,250 Pi — only a 200-byte JSON alert ever leaves the device. We also designed specifically for the full ranger response workflow in Indian forest conditions: SMS alerts, Firebase dashboard with map view, evidence WAV, mesh consensus, device health monitoring." },
+    { q: "What exactly does the ranger see and do when an alert fires?", tag: "impact", tagClass: "badge-teal",
+      a: "Within 3 seconds: (1) SMS to ranger's phone with threat type, confidence %, and device ID; (2) real-time alert appears in the React dashboard via Firebase's on_snapshot listener; (3) Firestore document written with full metadata — spectral features, severity, RMS loudness, evidence file path.\n\nThe dashboard has three views: a Threat Map showing alert locations on a map, an Alert Feed with NEW/ACKNOWLEDGED/RESOLVED status tracking, and a Device Status page showing each node's battery, signal, and last heartbeat.\n\nThe ranger acknowledges the alert, can listen to the evidence WAV from Firebase Storage, and decides whether to dispatch a patrol." },
+  ],
+  hard: [
+    { q: "A chainsaw runs for 8 hours straight — won't it spam the ranger?", tag: "hard", tagClass: "badge-red",
+      a: "The adaptive cooldown handles this. A CRITICAL confidence chainsaw detection (≥85%) re-alerts every 30 seconds maximum. The ranger gets an initial alert, acknowledges it, dispatches a patrol. Subsequent re-alerts confirm the activity is ongoing — which is useful information, not spam.\n\nWe could also add a \"SUSTAINED EVENT\" mode to the roadmap that collapses repeated detections of the same class into a single ongoing incident with duration, rather than individual alerts. That's a dashboard feature, not a detection change." },
+    { q: "What if a poacher destroys the node?", tag: "hard", tagClass: "badge-red",
+      a: "The heartbeat system detects this. Every node pushes a heartbeat to Firebase every 60 seconds. If a node goes offline — power failure, physical damage, or tampering — it stops sending heartbeats. The Device Status dashboard marks it OFFLINE with a precise last-seen timestamp.\n\nThe fact that a node goes dark is itself a signal — if it goes offline precisely when activity in that sector starts, that's suspicious and worth investigating. In Phase 2, the production enclosure is IP67-rated and camouflaged. We'd also deploy overlapping coverage so one destroyed node doesn't create a complete blind spot." },
+    { q: "What's the exact latency breakdown? How is it under 3 seconds?", tag: "hard", tagClass: "badge-red",
+      a: "Audio buffer fill: 200ms (8 chunks × 25ms).\nYAMNet TFLite inference: ~200ms on Pi Zero 2W.\nSpectral fingerprint computation: ~1ms (numpy FFT).\nFirestore write (async queue): ~500–800ms on WiFi.\nTwilio SMS: ~500ms.\n\nTotal: roughly 1–1.5 seconds for detection + 1–1.5 seconds for cloud push ≈ 2.5–3 seconds end-to-end.\n\nKey: the reporting queue (separate background thread) means the audio loop never blocks on network I/O — detection and alert push happen in parallel. The 3-second figure is the upper bound on good WiFi; on poor connectivity it may be longer." },
+    { q: "How does the mesh consensus engine work technically?", tag: "hard", tagClass: "badge-red",
+      a: "There's no direct Pi-to-Pi networking. Firebase is the message bus. Each Pi independently writes to the 'detections' collection. Every Pi also runs a Firestore on_snapshot listener — a real-time push event fired by Firebase when any new document is written.\n\nWhen Pi 01 detects a Gunshot and writes to detections, Pi 02's listener fires. The MeshConsensusEngine checks: has another node reported the same threat class within 30 seconds? If yes, it writes to the 'mesh_events' collection — a higher-confidence alert with \"2 nodes heard Gunshot in 30s.\"\n\nAdding a third Pi requires zero code changes — it joins the same Firebase project and the mesh activates automatically." },
+    { q: "What's your moat? Anyone can run YAMNet on a Pi.", tag: "hard", tagClass: "badge-red",
+      a: "Fair point — YAMNet is open source and so is the Pi. Our value is the integrated system design:\n\n(1) Dual-verification architecture (neural network + physical spectral fingerprint) reducing false positives without additional ML models.\n(2) Persistent-state stateful filter design that avoids boundary transients most naive implementations miss.\n(3) Multi-label top-10 + family expansion detection that catches YAMNet's aliased predictions.\n(4) Adaptive cooldown matching the real ranger threat/response workflow.\n(5) Full ranger response stack — dashboard, SMS, evidence WAV, mesh consensus, device health.\n\nAnyone can copy individual components, but the integrated system design is the result of working through every failure mode. And frankly, in conservation tech, the real moat is deployment relationships with forest departments and forest department trust — that's what we're building next." },
+    { q: "Why not just use a cheaper MEMS microphone module instead of the ReSpeaker HAT?", tag: "hard", tagClass: "badge-red",
+      a: "You can — and in Phase 2 production hardware we switch to dual discrete MEMS mics on a custom PCB (~$8 vs $20 for the HAT). For the prototype, the ReSpeaker HAT was the fastest path to validated I2S stereo audio on the Pi with known driver support. The HAT's driver stack for the Pi's I2S interface is well-tested. Building a custom analog mic circuit and PCB during a hackathon is a scope risk. The architecture is completely mic-agnostic — what matters is 16 kHz mono audio reaching the sosfilt pipeline. The specific mic module is swappable." },
+  ]
+};
+
+function showTab(el, tabId) {
+  // Update indicator
+  const indicator = document.getElementById('tab-indicator');
+  indicator.style.width = el.offsetWidth + 'px';
+  indicator.style.left = el.offsetLeft + 'px';
+
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  const target = document.getElementById(tabId);
+  target.classList.add('active');
+  
+  // Stagger animate cards
+  const wrappers = target.querySelectorAll('.qa-card-wrapper');
+  wrappers.forEach((w, i) => {
+    w.style.animation = 'none';
+    w.offsetHeight; // force reflow
+    w.style.animation = 'slideUp 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) ' + (i * 0.1) + 's backwards';
+  });
+}
+
+function build() {
+  Object.keys(data).forEach(tab => {
+    const container = document.getElementById(tab);
+    data[tab].forEach((item, idx) => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'qa-card-wrapper';
+      wrapper.style.animationDelay = (idx * 0.1) + 's';
+
+      const card = document.createElement('div');
+      card.className = 'qa-card';
+      
+      const inner = document.createElement('div');
+      inner.className = 'qa-card-inner';
+
+      const qHtml = '<div class="qa-q">' +
+                      '<span class="qa-q-text">' + item.q + '</span>' +
+                      '<div style="display:flex;gap:16px;align-items:center;flex-shrink:0">' +
+                        '<span class="badge ' + item.tagClass + '">' + item.tag + '</span>' +
+                        '<span class="chevron"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>' +
+                      '</div>' +
+                    '</div>';
+      
+      const formattedA = item.a.replace(/\n/g, '<br><br>').replace(/<br><br>(\d+\.)/g, '<br>$1');
+      const aHtml = '<div class="qa-a"><p>' + formattedA + '</p></div>';
+
+      inner.innerHTML = qHtml + aHtml;
+      
+      inner.querySelector('.qa-q').addEventListener('click', function() {
+        card.classList.toggle('open');
+      });
+
+      card.appendChild(inner);
+
+      // 3D Glass Tilt Effect
+      card.addEventListener('mousemove', e => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        
+        const rotateX = ((y - centerY) / centerY) * -6;
+        const rotateY = ((x - centerX) / centerX) * 6;
+        
+        card.style.transform = 'perspective(1500px) rotateX(' + rotateX + 'deg) rotateY(' + rotateY + 'deg) scale3d(1.02, 1.02, 1.02)';
+        
+        // Dynamic specular highlight based on mouse
+        const glossX = (x / rect.width) * 100;
+        const glossY = (y / rect.height) * 100;
+        card.style.background = 'radial-gradient(circle at ' + glossX + '% ' + glossY + '%, rgba(255,255,255,0.08) 0%, rgba(10, 20, 15, 0.35) 60%)';
+      });
+
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = 'perspective(1500px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+        card.style.background = 'rgba(8, 16, 12, 0.35)';
+      });
+
+      wrapper.appendChild(card);
+      container.appendChild(wrapper);
+    });
+  });
+}
+
+// Init
+build();
+setTimeout(() => {
+  const initialTab = document.querySelector('.tab.active');
+  showTab(initialTab, 'basics');
+}, 100);
+
+// --- Custom Glow Cursor ---
+const dot = document.querySelector('.cursor-dot');
+const ring = document.querySelector('.cursor-ring');
+let mouseX = window.innerWidth / 2;
+let mouseY = window.innerHeight / 2;
+let ringX = mouseX;
+let ringY = mouseY;
+
+window.addEventListener('mousemove', e => {
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+  dot.style.transform = 'translate(' + mouseX + 'px, ' + mouseY + 'px) translate(-50%, -50%)';
+});
+
+function animateRing() {
+  ringX += (mouseX - ringX) * 0.2;
+  ringY += (mouseY - ringY) * 0.2;
+  ring.style.transform = 'translate(' + ringX + 'px, ' + ringY + 'px) translate(-50%, -50%)';
+  requestAnimationFrame(animateRing);
+}
+animateRing();
+
+// Interactive Cursor States
+document.querySelectorAll('.tab, .qa-q').forEach(el => {
+  el.addEventListener('mouseenter', () => {
+    ring.style.width = '60px';
+    ring.style.height = '60px';
+    ring.style.background = 'rgba(13, 207, 131, 0.1)';
+    ring.style.borderColor = 'rgba(13, 207, 131, 0.8)';
+  });
+  el.addEventListener('mouseleave', () => {
+    ring.style.width = '40px';
+    ring.style.height = '40px';
+    ring.style.background = 'transparent';
+    ring.style.borderColor = 'rgba(13, 207, 131, 0.4)';
+  });
+});
+
+// --- Click Sparks ---
+window.addEventListener('click', e => {
+  const container = document.getElementById('sparks-container');
+  for(let i=0; i<8; i++) {
+    const spark = document.createElement('div');
+    spark.className = 'spark';
+    spark.style.left = e.clientX + 'px';
+    spark.style.top = e.clientY + 'px';
+    container.appendChild(spark);
+    
+    const angle = (i / 8) * Math.PI * 2;
+    const dist = 40 + Math.random() * 30;
+    const tx = Math.cos(angle) * dist;
+    const ty = Math.sin(angle) * dist;
+    
+    spark.animate([
+      { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+      { transform: 'translate(calc(-50% + ' + tx + 'px), calc(-50% + ' + ty + 'px)) scale(0)', opacity: 0 }
+    ], { duration: 600, easing: 'cubic-bezier(0.165, 0.84, 0.44, 1)' }).onfinish = () => spark.remove();
+  }
+});
+
+// --- Bioluminescent Fireflies & Butterflies ---
+const canvas = document.getElementById('fireflies');
+const ctx = canvas.getContext('2d');
+let width, height, fireflies, butterflies;
+
+function initCanvas() {
+  width = canvas.width = window.innerWidth;
+  height = canvas.height = window.innerHeight;
+  fireflies = [];
+  butterflies = [];
+  
+  for (let i = 0; i < 100; i++) {
+    fireflies.push({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      s: Math.random() * 2.5 + 0.5,
+      ang: Math.random() * 2 * Math.PI,
+      v: Math.random() * 0.5 + 0.1
+    });
+  }
+  
+  for (let i = 0; i < 12; i++) {
+    butterflies.push({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      s: Math.random() * 5 + 3,
+      ang: Math.random() * 2 * Math.PI,
+      v: Math.random() * 1.5 + 0.5,
+      flapSpeed: Math.random() * 0.1 + 0.05,
+      flapPhase: Math.random() * Math.PI,
+      color: ['rgba(13, 207, 131, 0.9)', 'rgba(161, 242, 205, 0.9)', 'rgba(0, 153, 94, 0.9)'][Math.floor(Math.random()*3)]
+    });
+  }
+}
+
+function drawParticles() {
+  ctx.clearRect(0, 0, width, height);
+  
+  // Draw Fireflies
+  ctx.shadowBlur = 15;
+  ctx.shadowColor = '#0dcf83';
+  ctx.fillStyle = 'rgba(161, 242, 205, 0.9)';
+  
+  fireflies.forEach(f => {
+    const dx = mouseX - f.x;
+    const dy = mouseY - f.y;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    
+    if(dist < 250) {
+      const force = (250 - dist) / 250;
+      f.x += dx * force * 0.015;
+      f.y += dy * force * 0.015;
+    } else {
+      f.x += Math.cos(f.ang) * f.v;
+      f.y += Math.sin(f.ang) * f.v;
+      f.ang += (Math.random() - 0.5) * 0.1;
+    }
+
+    if (f.x < 0) f.x = width;
+    if (f.x > width) f.x = 0;
+    if (f.y < 0) f.y = height;
+    if (f.y > height) f.y = 0;
+
+    ctx.beginPath();
+    ctx.arc(f.x, f.y, f.s, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  
+  // Draw Butterflies
+  butterflies.forEach(b => {
+    b.flapPhase += b.flapSpeed;
+    
+    b.ang += (Math.random() - 0.5) * 0.15;
+    b.x += Math.cos(b.ang) * b.v;
+    b.y += Math.sin(b.ang) * b.v;
+    
+    if (b.x < -20) b.x = width + 20;
+    if (b.x > width + 20) b.x = -20;
+    if (b.y < -20) b.y = height + 20;
+    if (b.y > height + 20) b.y = -20;
+    
+    const wingWidth = Math.abs(Math.sin(b.flapPhase)) * b.s * 1.5;
+    const wingHeight = b.s * 1.5;
+    
+    ctx.save();
+    ctx.translate(b.x, b.y);
+    ctx.rotate(b.ang + Math.PI / 2);
+    
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = b.color;
+    ctx.fillStyle = b.color;
+    
+    ctx.beginPath();
+    ctx.ellipse(-wingWidth/2 - 1, 0, wingWidth/2, wingHeight, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.beginPath();
+    ctx.ellipse(wingWidth/2 + 1, 0, wingWidth/2, wingHeight, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.restore();
+  });
+  
+  requestAnimationFrame(drawParticles);
+}
+
+window.addEventListener('resize', initCanvas);
+initCanvas();
+drawParticles();
+
+</script>
+</body>
+</html>
